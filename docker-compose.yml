@@ -1,0 +1,42 @@
+version: "3.4"
+
+services:
+  mysql:
+    image: mysql:9.2
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile_DB
+    volumes:
+      - ./data/db/conf.d:/etc/mysql/conf.d
+      - ./data/db/data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    restart: always
+    environment:
+      - MYSQL_USER=camel
+      - MYSQL_ROOT_PASSWORD=1234
+      - MYSQL_PASSWORD=1234
+      - MYSQL_DATABASE=study
+    mem_limit: 4096M
+  phpserver:
+    # image:
+    #network_mode: host
+    build:
+      context: .
+      dockerfile: Dockerfile_apache
+    restart: unless-stopped
+    ports:
+     - 80:80
+    volumes:
+     - ./html:/var/www/html
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: unless-stopped
+    depends_on: [mysql]
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: 1234
