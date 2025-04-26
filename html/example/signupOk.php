@@ -19,7 +19,7 @@
             <!-- Result -->
             <div>
                 <div class='text-center mt-5 fw-bold'>회원가입 완료</div>
-                <button type='button' class='btn btn-success m-3' onClick='window.location.href="/index.php"'>로그인 하기</button>
+                <button type='button' class='btn btn-success m-3' onClick='window.location.href="/example//index.php"'>로그인 하기</button>
             </div>
         </div>
     </div>

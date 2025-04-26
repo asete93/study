@@ -1,3 +1,35 @@
+<?php
+    $isLogin = false;
+    $name = "";
+
+    session_start();
+    if(isset($_SESSION['id']) || isset($_COOKIE['loginUser'])){
+        if(isset($_SESSION['id'])){
+            $id = $_SESSION['id'];
+        } else {
+            $id = $_COOKIE['loginUser'];
+        }
+
+        $conn = new mysqli("mysql", "root", "1234", "study");
+        if ($conn->connect_error) {
+            die("DB 연결 실패: " . $conn->connect_error);
+        }
+
+        // SQL인젝션 취약버전
+        $sql = "SELECT * FROM users WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = mysqli_fetch_array($result);
+        $Exists = $result->num_rows > 0;
+
+        if($Exists){
+            $isLogin = true;
+            $name = $row['name'];
+        }
+    }
+?>
 <!doctype html>
 <html lang="en">
   <head>
@@ -16,98 +48,61 @@
                 <h2>CAMEL</h2>
             </div>
 
-            <!-- Login Form -->
-            <ul class="nav nav-tabs mt-3" id="myTab" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login-tab-pane" type="button" role="tab" aria-controls="login-tab-pane" aria-selected="true">ID/전화번호</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="temp-tab" data-bs-toggle="tab" data-bs-target="#temp-tab-pane" type="button" role="tab" aria-controls="temp-tab-pane" aria-selected="false" onClick="window.location.href='/login-case/cookie/index.php'">쿠키 로그인</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="qr-tab" data-bs-toggle="tab" data-bs-target="#qr-tab-pane" type="button" role="tab" aria-controls="qr-tab-pane" aria-selected="false" onClick="window.location.href='/login-case/session/index.php'">세션 로그인</button>
-                </li>
-            </ul>
-            <div class="tab-content" id="myTabContent">
-                <div class="tab-pane fade show active border border-top-0 rounded-bottom rounded-top-end" id="login-tab-pane" role="tabpanel" aria-labelledby="login-tab" tabindex="0">
-                    <form id="loginForm" class="d-flex justify-content-center flex-column" action="login.php" method="POST">
-                        <div class="input-group p-3 pb-0">
-                            <input required type="text" class="form-control" placeholder="아이디" name="id" aria-label="Recipient's id" aria-describedby="button-addon2">
-                        </div>
+            <?php 
+                if($isLogin){
+                    echo "<div class='text-center mt-5 fw-bold'>환영합니다.</br> $name</div>";
+                    echo "<button type='button' class='btn btn-success m-1 mt-5' onClick='window.location.href=\"/board/list.php\"'>게시판 이동</button>";
+                    echo "<button type='button' class='btn btn-danger m-1' onClick='window.location.href=\"/logout.php\"'>로그아웃</button>";
+                } else {
+                    echo '
+                        <!-- Login Form -->
+                            <ul class="nav nav-tabs mt-3" id="myTab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="cookie-login-tab" data-bs-toggle="tab" data-bs-target="#cookie-login-tab-pane" type="button" role="tab" aria-controls="cookie-login-tab-pane" aria-selected="true">쿠키 로그인</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="session-login-tab" data-bs-toggle="tab" data-bs-target="#session-login-tab-pane" type="button" role="tab" aria-controls="session-login-tab-pane" aria-selected="false" >세션 로그인</button>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="myTabContent">
+                                <div class="tab-pane fade show active border border-top-0 rounded-bottom rounded-top-end" id="cookie-login-tab-pane" role="tabpanel" aria-labelledby="cookie-login-tab" tabindex="0">
+                                    <form class="d-flex justify-content-center flex-column" action="login.php" method="POST">
+                                        <div class="input-group p-3 pb-0">
+                                            <input required type="text" class="form-control" placeholder="아이디" name="id" aria-label="Recipient\'s id" aria-describedby="button-addon2">
+                                        </div>
 
-                        <div class="input-group p-3 pt-0 pb-0">
-                            <input required type="password" class="form-control" placeholder="패스워드" name="pass" aria-label="Recipient's password" aria-describedby="button-addon2">
-                        </div>
+                                        <div class="input-group p-3 pt-0 pb-0">
+                                            <input required type="password" class="form-control" placeholder="패스워드" name="pass" aria-label="Recipient\'s password" aria-describedby="button-addon2">
+                                        </div>
 
+                                        <input type="hidden" name="loginType" value="cookie">
 
-                        <div class="form-check m-3">
-                            <input class="form-check-input" type="radio" name="loginType" id="loginType0" value="basic" checked>
-                            <label class="form-check-label" for="loginType0">
-                                기본
-                            </label>
-                        </div>
-                        <div class="form-check m-3 mt-0">
-                            <input class="form-check-input" type="radio" name="loginType" id="loginType1" value="both">
-                            <label class="form-check-label" for="loginType1">
-                                식별/인증 동시
-                            </label>
-                        </div>
-                        <div class="form-check m-3 mt-0">
-                            <input class="form-check-input" type="radio" name="loginType" id="loginType2" value="sep">
-                            <label class="form-check-label" for="loginType2">
-                                식별/인증 분리
-                            </label>
-                        </div>
-                        <div class="form-check m-3 mt-0">
-                            <input class="form-check-input" type="radio" name="loginType" id="loginType3" value="bothHash">
-                            <label class="form-check-label" for="loginType3">
-                                식별/인증 동시 (Hash)
-                            </label>
-                        </div>
-                        <div class="form-check m-3 mt-0">
-                            <input class="form-check-input" type="radio" name="loginType" id="loginType4" value="sepHash">
-                            <label class="form-check-label" for="loginType4">
-                                식별/인증 분리 (Hash)
-                            </label>
-                        </div>
+                                        <button type="submit" class="btn btn-success m-3">로그인</button>
+                                    </form>
+                                </div>
+                                <div class="tab-pane fade border border-top-0 rounded-bottom rounded-top-end" id="session-login-tab-pane" role="tabpanel" aria-labelledby="session-login-tab" tabindex="1">
+                                    <form class="d-flex justify-content-center flex-column" action="login.php" method="POST">
+                                        <div class="input-group p-3 pb-0">
+                                            <input required type="text" class="form-control" placeholder="아이디" name="id" aria-label="Recipient\'s id" aria-describedby="button-addon2">
+                                        </div>
 
-                        <button type="submit" class="btn btn-success m-3">로그인</button>
-                    </form>
-                </div>
-                <div class="tab-pane fade" id="temp-tab-pane" role="tabpanel" aria-labelledby="temp-tab" tabindex="0">TEMP</div>
-                <div class="tab-pane fade" id="qr-tab-pane" role="tabpanel" aria-labelledby="qr-tab" tabindex="0">QR</div>
-            </div>
-            <div class="d-flex justify-content-end">
-                <a href="/signup.php" class="m-3 mt-1 text-decoration-none nav-item" style="cursor:pointer;">회원가입</a>
-            </div>
+                                        <div class="input-group p-3 pt-0 pb-0">
+                                            <input required type="password" class="form-control" placeholder="패스워드" name="pass" aria-label="Recipient\'s password" aria-describedby="button-addon2">
+                                        </div>
+
+                                        <input type="hidden" name="loginType" value="session">
+
+                                        <button type="submit" class="btn btn-success m-3">로그인</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <a href="/signup.php" class="m-3 mt-1 text-decoration-none nav-item" style="cursor:pointer;">회원가입</a>
+                            </div>
+                    ';
+                }
+            ?>
         </div>
     </div>
   </body>
-
-  <!-- radio에 맞게 동적 action 설정 -->
-  <script>
-    const form = document.getElementById('loginForm');
-
-    form.addEventListener('submit', function (e) {
-        const selected = document.querySelector('input[name="loginType"]:checked').value;
-
-        switch (selected) {
-            case 'basic':
-                form.action = 'login.php';
-                break;
-            case 'both':
-                form.action = 'login-case/loginWithIdAndAuth.php';
-                break;
-            case 'sep':
-                form.action = 'login-case/loginSepIdAndAuth.php';
-                break;
-            case 'bothHash':
-                form.action = 'login-case/loginWithIdAndAuthAndHash.php';
-                break;
-            case 'sepHash':
-                form.action = 'login-case/loginSepIdAndAuthAndHash.php';
-                break;
-        }
-    });
-    </script>
 </html>

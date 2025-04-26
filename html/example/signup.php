@@ -24,15 +24,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $alreadyExists = $result->num_rows > 0;
     if(!$alreadyExists && !is_null($id) && $id != "") {
         $point = rand(50,100);
-        $pw_hash = hash("sha256", $pass);
-
+        // 일반 데이터 입력
         $sql = "INSERT INTO users values(?,?,?,?,?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssssd", $id, $name, $email, $pw_hash, $point);
+        $stmt->bind_param("ssssd", $id, $name, $email, $pass, $point);
         $stmt->execute();
         $result = $stmt->get_result();
 
-        header("Location: /signupOk.php");
+        // Hash 데이터 테스트용
+        $sql = "INSERT INTO users values(?,?,?,?,?)";
+        $stmt = $conn->prepare($sql);
+
+        $id_hash = $id . "_hash";
+        $name_hash = $name . "_hash";
+        $pw_hash = hash("sha256", $pass);
+
+        $stmt->bind_param("ssssd", $id_hash, $name_hash, $email, $pw_hash, $point);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        header("Location: /example/signupOk.php");
     } else {
         $message = "이미 사용중인 ID입니다";
         $message_type = "error";
@@ -92,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="d-flex justify-content-end">
-                <a href="/" class="m-3 mt-1 text-decoration-none nav-item" style="cursor:pointer;">이전으로</a>
+                <a href="/example" class="m-3 mt-1 text-decoration-none nav-item" style="cursor:pointer;">이전으로</a>
             </div>
         </div>
     </div>

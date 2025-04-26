@@ -12,7 +12,7 @@
         <div class="d-flex flex-column f-weight">
             <!-- Logo -->
             <div class="d-flex flex-column align-items-center" style="margin-top: 150px">
-                <img src="../images/camel.png" style="width: 100px;"/>
+                <img src="../../images/camel.png" style="width: 100px;"/>
                 <h2>CAMEL</h2>
             </div>
 

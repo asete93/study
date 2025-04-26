@@ -11,5 +11,5 @@
     }
     
     session_destroy(); // 세션 파괴
-    header("Location: /login-case/session/index.php");
+    header("Location: /example/login-case/session/index.php");
 ?>
